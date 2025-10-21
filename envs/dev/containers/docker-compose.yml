@@ -1,0 +1,10 @@
+services: 
+
+  type-app:
+    image: #URI la imagen de aws (ECR)
+    container_name: type-app
+    ports:
+      - "3000:3000"
+    env_file:
+      #Archivo .env con las variables de entorno
+    
