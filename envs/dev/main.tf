@@ -17,7 +17,7 @@ module "vm-linux-server" {
 }
 
 output "vm-linux-server-ip" {
-  value = module.vm-linux-server.aws_instance_ip 
+  value = module.vm-linux-server.instance_public_ip 
 }
 
 

@@ -115,5 +115,5 @@ jobs:
         id: tf_outputs
         run: |
           cd envs/prod
-          echo "server_ip=$(terraform output -raw server_ip 2>/dev/null || echo 'N/A')" >> $GITHUB_OUTPUT
+          echo "server_ip=$(terraform output -raw vm-linux-server-ip 2>/dev/null || echo 'N/A')" >> $GITHUB_OUTPUT
         continue-on-error: true
