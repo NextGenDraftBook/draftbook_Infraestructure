@@ -8,6 +8,24 @@ data "aws_security_group" "draftbook_sg" {
     id = var.aws_draftbook_sg
 }
 
+# Obtener el VPC del security group
+data "aws_vpc" "selected" {
+  id = data.aws_security_group.draftbook_sg.vpc_id
+}
+
+# Obtener una subnet en el VPC
+data "aws_subnets" "available" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.selected.id]
+  }
+  
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
+  }
+}
+
 # Obtener el AMI más reciente de Ubuntu 22.04
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -30,6 +48,10 @@ resource "aws_instance" "draftbook_app_server" {
   instance_type = var.aws_instance_type
   key_name = data.aws_key_pair.draftbook_app_keys.key_name
   user_data = filebase64("${path.module}/scripts/apps-install.sh")
+  
+  # Usar una subnet del VPC
+  subnet_id = length(data.aws_subnets.available.ids) > 0 ? data.aws_subnets.available.ids[0] : null
+  
   vpc_security_group_ids = [
     data.aws_security_group.draftbook_sg.id
   ]
