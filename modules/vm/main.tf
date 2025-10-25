@@ -63,7 +63,7 @@ resource "aws_instance" "draftbook_app_server" {
         connection {
           type = "ssh"
           user = "ubuntu"
-          private_key = file("./keys/draftbook_app_key")
+          private_key = file("${path.root}/keys/draftbook_app_key")
           host = self.public_ip
           timeout = "5m"
         }
@@ -88,7 +88,7 @@ resource "aws_instance" "draftbook_app_server" {
         connection {
           type = "ssh"
           user = "ubuntu"
-          private_key = file("./keys/draftbook_app_key")
+          private_key = file("${path.root}/keys/draftbook_app_key")
           host = self.public_ip
           timeout = "5m"
         }
@@ -111,7 +111,7 @@ resource "null_resource" "setup_app" {
       connection {
         type = "ssh"
         user = "ubuntu"
-        private_key = file("./keys/draftbook_app_key")
+        private_key = file("${path.root}/keys/draftbook_app_key")
         host = aws_instance.draftbook_app_server.public_ip
         timeout = "5m"
       }
