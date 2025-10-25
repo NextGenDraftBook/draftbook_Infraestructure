@@ -35,6 +35,19 @@ jobs:
                 role-to-assume: ${{ secrets.AWS_ROLE }}
                 aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
             
+            - name: Verify S3 Backend Bucket
+              run: |
+                echo "📦 Verificando bucket S3 para Terraform state..."
+                BUCKET_NAME="draftbook-terraform-state"
+                
+                if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+                  echo "✅ Bucket $BUCKET_NAME existe"
+                else
+                  echo "❌ ERROR: Bucket $BUCKET_NAME no existe"
+                  echo "   El state de Terraform no se puede acceder"
+                  exit 1
+                fi
+            
             - name: Create SSH Keys from secrets (no longer needed but kept for compatibility)
               run: |
                 mkdir -p ./envs/dev/keys

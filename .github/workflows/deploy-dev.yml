@@ -35,6 +35,49 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup S3 Backend Bucket
+        run: |
+          echo "📦 Verificando/creando bucket S3 para Terraform state..."
+          BUCKET_NAME="draftbook-terraform-state"
+          AWS_REGION="${{ secrets.TF_VAR_AWS_REGION }}"
+          
+          # Verificar si el bucket existe
+          if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+            echo "✅ Bucket $BUCKET_NAME ya existe"
+          else
+            echo "🔨 Creando bucket $BUCKET_NAME en $AWS_REGION..."
+            
+            if [ "$AWS_REGION" = "us-east-1" ]; then
+              aws s3api create-bucket --bucket "$BUCKET_NAME" --region "$AWS_REGION"
+            else
+              aws s3api create-bucket \
+                --bucket "$BUCKET_NAME" \
+                --region "$AWS_REGION" \
+                --create-bucket-configuration LocationConstraint="$AWS_REGION"
+            fi
+            
+            # Habilitar versionado
+            aws s3api put-bucket-versioning \
+              --bucket "$BUCKET_NAME" \
+              --versioning-configuration Status=Enabled
+            
+            # Habilitar encriptación
+            aws s3api put-bucket-encryption \
+              --bucket "$BUCKET_NAME" \
+              --server-side-encryption-configuration '{
+                "Rules": [{
+                  "ApplyServerSideEncryptionByDefault": {
+                    "SSEAlgorithm": "AES256"
+                  }
+                }]
+              }'
+            
+            echo "✅ Bucket creado y configurado"
+          fi
+          
+          echo "📋 Bucket: $BUCKET_NAME"
+          echo "🌍 Región: $AWS_REGION"
+
       - name: Create SSH Keys from secrets
         run: |
           mkdir -p ./envs/dev/keys
