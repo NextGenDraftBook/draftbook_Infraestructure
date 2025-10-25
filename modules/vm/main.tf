@@ -37,7 +37,7 @@ resource "aws_instance" "draftbook_app_server" {
 
   tags = {
     Name = "${var.aws_server_name} - ${var.aws_environment}"
-  } 
+  }
 
   #PROVISIONERS para ejecutar comandos después de crear la instancia
     provisioner "remote-exec" {
@@ -45,7 +45,7 @@ resource "aws_instance" "draftbook_app_server" {
           type = "ssh"
           user = "ubuntu"
           private_key = file("./keys/draftbook_app_key")
-          host = self.public.ip
+          host = self.public_ip
         }
         inline = [ 
             "sudo mkdir /containers",
@@ -68,7 +68,7 @@ resource "aws_instance" "draftbook_app_server" {
           type = "ssh"
           user = "ubuntu"
           private_key = file("./keys/draftbook_app_key")
-          host = self.public.ip
+          host = self.public_ip
         }
         source = "./containers/docker-compose.yml"
         destination = "/containers/docker-compose.yml"
