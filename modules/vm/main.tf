@@ -4,25 +4,9 @@ resource "aws_key_pair" "draftbook_app_keys" {
     key_name   = var.aws_key_pair_name
 }
 
-# Grupo de Seguridad
-resource "aws_security_group" "draftbook_sg" {
-    name = var.aws_draftbook_sg
-    description = "Permitir Conexiones por SSH "
-
-    ingress {
-        description = "Node-App"
-        from_port   = 3000
-        to_port     = 3000
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    egress {
-        from_port = 0
-        to_port   = 0
-        protocol  = "-1"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
+# Usar security group existente
+data "aws_security_group" "draftbook_sg" {
+    id = var.aws_draftbook_sg
 }
 
 # Instancia EC2
