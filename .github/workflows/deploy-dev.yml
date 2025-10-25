@@ -38,19 +38,42 @@ jobs:
       - name: Create SSH Keys from secrets
         run: |
           mkdir -p ./envs/dev/keys
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ./envs/dev/keys/draftbook_app_key
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" | tr -d '\r' > ./envs/dev/keys/draftbook_app_key.pub
-          chmod 600 ./envs/dev/keys/draftbook_app_key
-          chmod 644 ./envs/dev/keys/draftbook_app_key.pub
+          
+          # Intentar decodificar base64 primero (si el secreto está en base64)
+          # Si falla, usar el secreto directamente
+          if echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > /dev/null 2>&1; then
+            echo "🔓 Decodificando llave desde Base64..."
+            echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ./envs/dev/keys/draftbook_KEYPAR.pem
+          else
+            echo "📝 Usando llave en formato texto..."
+            printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ./envs/dev/keys/draftbook_KEYPAR.pem
+          fi
+          
+          chmod 600 ./envs/dev/keys/draftbook_KEYPAR.pem
+          
           # Verificar que la llave se creó correctamente
+          echo ""
+          echo "=== Contenido del directorio de llaves ==="
           ls -la ./envs/dev/keys/
-          head -1 ./envs/dev/keys/draftbook_app_key
+          echo ""
+          echo "=== Primera línea de la llave privada ==="
+          head -1 ./envs/dev/keys/draftbook_KEYPAR.pem
+          echo ""
+          echo "=== Última línea de la llave privada ==="
+          tail -1 ./envs/dev/keys/draftbook_KEYPAR.pem
+          echo ""
+          echo "=== Número de líneas ==="
+          wc -l ./envs/dev/keys/draftbook_KEYPAR.pem
+          echo ""
+          echo "=== Verificación completa de la llave ==="
+          chmod +x .github/verify-ssh-key.sh
+          .github/verify-ssh-key.sh ./envs/dev/keys/draftbook_KEYPAR.pem || echo "⚠️ La verificación con ssh-keygen falló, pero continuamos"
 
       - name: Upload SSH Keys
         uses: actions/upload-artifact@v4
         with:
           name: ssh-keys-dev
-          path: ./envs/dev/keys
+          path: ./envs/dev/keys/draftbook_KEYPAR.pem
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2

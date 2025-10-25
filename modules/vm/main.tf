@@ -42,7 +42,7 @@ resource "aws_instance" "draftbook_app_server" {
   ami = data.aws_ami.ubuntu.id
   instance_type = var.aws_instance_type
   key_name = data.aws_key_pair.draftbook_app_keys.key_name
-  user_data = filebase64("${path.module}/scripts/apps-install.sh")
+  user_data_base64 = filebase64("${path.module}/scripts/apps-install.sh")
   
   # Asegurar que la instancia tenga IP pública
   associate_public_ip_address = true
@@ -63,7 +63,7 @@ resource "aws_instance" "draftbook_app_server" {
         connection {
           type = "ssh"
           user = "ubuntu"
-          private_key = file("${path.root}/keys/draftbook_app_key")
+          private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
           host = self.public_ip
           timeout = "5m"
         }
@@ -88,7 +88,7 @@ resource "aws_instance" "draftbook_app_server" {
         connection {
           type = "ssh"
           user = "ubuntu"
-          private_key = file("${path.root}/keys/draftbook_app_key")
+          private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
           host = self.public_ip
           timeout = "5m"
         }
@@ -111,7 +111,7 @@ resource "null_resource" "setup_app" {
       connection {
         type = "ssh"
         user = "ubuntu"
-        private_key = file("${path.root}/keys/draftbook_app_key")
+        private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
         host = aws_instance.draftbook_app_server.public_ip
         timeout = "5m"
       }
