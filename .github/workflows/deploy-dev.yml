@@ -38,7 +38,7 @@ jobs:
       - name: Setup S3 Backend Bucket
         run: |
           echo "📦 Verificando/creando bucket S3 para Terraform state..."
-          BUCKET_NAME="draftbook-terraform-state"
+          BUCKET_NAME="draftbook-terraform-state-537692431882"
           AWS_REGION="${{ secrets.TF_VAR_AWS_REGION }}"
           
           # Verificar si el bucket existe

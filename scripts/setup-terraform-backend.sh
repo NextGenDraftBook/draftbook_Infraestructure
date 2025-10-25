@@ -6,7 +6,7 @@
 set -e
 
 AWS_REGION="us-east-2"
-BUCKET_NAME="draftbook-terraform-state"
+BUCKET_NAME="draftbook-terraform-state-537692431882"
 
 echo "🚀 Configurando backend de Terraform..."
 echo ""

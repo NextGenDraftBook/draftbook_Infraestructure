@@ -38,7 +38,7 @@ jobs:
             - name: Verify S3 Backend Bucket
               run: |
                 echo "📦 Verificando bucket S3 para Terraform state..."
-                BUCKET_NAME="draftbook-terraform-state"
+                BUCKET_NAME="draftbook-terraform-state-537692431882"
                 
                 if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
                   echo "✅ Bucket $BUCKET_NAME existe"
