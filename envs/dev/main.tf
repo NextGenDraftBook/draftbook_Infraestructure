@@ -2,7 +2,7 @@ terraform {
   backend "s3" {
     bucket  = "draftbook-terraform-state-537692431882"
     key     = "dev/terraform.tfstate"
-    region  = "us-east-2"
+    region  = "us-east-1"  # El bucket está en us-east-1
     encrypt = true
   }
 }
