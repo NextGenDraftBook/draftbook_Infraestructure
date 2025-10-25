@@ -8,9 +8,25 @@ data "aws_security_group" "draftbook_sg" {
     id = var.aws_draftbook_sg
 }
 
+# Obtener el AMI más reciente de Ubuntu 22.04
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical (Ubuntu)
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 # Instancia EC2
 resource "aws_instance" "draftbook_app_server" {
-  ami = "ami-0cfde0ea8edd312d4" #Amazon Linux 2 AMI (HVM), SSD Volume Type - us-east-2
+  ami = data.aws_ami.ubuntu.id
   instance_type = var.aws_instance_type
   key_name = data.aws_key_pair.draftbook_app_keys.key_name
   user_data = filebase64("${path.module}/scripts/apps-install.sh")
