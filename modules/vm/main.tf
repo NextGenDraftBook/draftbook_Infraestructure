@@ -1,7 +1,6 @@
-#Par de claves 
-resource "aws_key_pair" "draftbook_app_keys" {
-    public_key = file("./keys/draftbook_app_key.pub")
-    key_name   = var.aws_key_pair_name
+# Usar key pair existente
+data "aws_key_pair" "draftbook_app_keys" {
+    key_name = var.aws_key_pair_name
 }
 
 # Usar security group existente
@@ -13,7 +12,7 @@ data "aws_security_group" "draftbook_sg" {
 resource "aws_instance" "draftbook_app_server" {
   ami = "ami-0cfde0ea8edd312d4" #Amazon Linux 2 AMI (HVM), SSD Volume Type - us-east-2
   instance_type = var.aws_instance_type
-  key_name = aws_key_pair.draftbook_app_keys.key_name
+  key_name = data.aws_key_pair.draftbook_app_keys.key_name
   user_data = filebase64("${path.module}/scripts/apps-install.sh")
   vpc_security_group_ids = [
     data.aws_security_group.draftbook_sg.id
