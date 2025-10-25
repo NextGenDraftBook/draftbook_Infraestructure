@@ -57,6 +57,17 @@ resource "aws_instance" "draftbook_app_server" {
   tags = {
     Name = "${var.aws_server_name} - ${var.aws_environment}"
   }
+}
+
+# Esperar 3 minutos para que user_data (apps-install.sh) termine de ejecutarse
+resource "time_sleep" "wait_for_user_data" {
+  create_duration = "180s"
+  depends_on = [ aws_instance.draftbook_app_server ]
+}
+
+# Null resource para los provisioners (ejecutar después del delay)
+resource "null_resource" "initial_setup" {
+  depends_on = [ time_sleep.wait_for_user_data ]
 
   #PROVISIONERS para ejecutar comandos después de crear la instancia
     provisioner "remote-exec" {
@@ -64,12 +75,17 @@ resource "aws_instance" "draftbook_app_server" {
           type = "ssh"
           user = "ubuntu"
           private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
-          host = self.public_ip
-          timeout = "5m"
+          host = aws_instance.draftbook_app_server.public_ip
+          timeout = "10m"
         }
+        
+        # Esperar a que cloud-init termine de ejecutar user_data
         inline = [ 
-            "sudo mkdir /containers",
-            "sudo mkdir /home/ubuntu/.aws",
+            "echo 'Esperando a que cloud-init termine...'",
+            "cloud-init status --wait || echo 'cloud-init no disponible, continuando...'",
+            "echo 'Sistema listo, creando directorios...'",
+            "sudo mkdir -p /containers",
+            "sudo mkdir -p /home/ubuntu/.aws",
             "touch /containers/.env",
             "sudo chmod 777 /containers",
             "sudo chmod 777 /containers/.env",
@@ -89,31 +105,30 @@ resource "aws_instance" "draftbook_app_server" {
           type = "ssh"
           user = "ubuntu"
           private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
-          host = self.public_ip
-          timeout = "5m"
+          host = aws_instance.draftbook_app_server.public_ip
+          timeout = "10m"
         }
         source = "./containers/docker-compose.yml"
         destination = "/containers/docker-compose.yml"
         
     }
-
-  #Para hacer muchas iguales -> count = 3
 }
 
-resource "time_sleep" "wait_120_seconds" {
+# Esperar 2 minutos adicionales después del setup inicial
+resource "time_sleep" "wait_before_docker" {
   create_duration = "120s"
-  depends_on = [ aws_instance.draftbook_app_server ]
+  depends_on = [ null_resource.initial_setup ]
 }
 
 resource "null_resource" "setup_app" {
-    depends_on = [ time_sleep.wait_120_seconds ]
+    depends_on = [ time_sleep.wait_before_docker ]
     provisioner "remote-exec" {
       connection {
         type = "ssh"
         user = "ubuntu"
         private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
         host = aws_instance.draftbook_app_server.public_ip
-        timeout = "5m"
+        timeout = "10m"
       }
       inline = [ 
         "cd /containers",

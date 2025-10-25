@@ -1,0 +1,85 @@
+name: Test SSH Connection
+
+on:
+  workflow_dispatch:
+    inputs:
+      instance_ip:
+        description: 'EC2 Instance Public IP'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-latest
+    environment: development
+    
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
+          
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create SSH Key
+        run: |
+          mkdir -p ./keys
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ./keys/draftbook_KEYPAR.pem
+          chmod 600 ./keys/draftbook_KEYPAR.pem
+          echo "✅ SSH key created"
+
+      - name: Test Network Connectivity
+        run: |
+          echo "🔍 Testing connection to ${{ inputs.instance_ip }}..."
+          echo ""
+          echo "=== Ping Test ==="
+          ping -c 3 ${{ inputs.instance_ip }} || echo "❌ Ping failed (esto es normal, ICMP puede estar bloqueado)"
+          echo ""
+          echo "=== Port 22 Test (SSH) ==="
+          nc -zv -w5 ${{ inputs.instance_ip }} 22 || echo "❌ Port 22 is not reachable"
+          echo ""
+          echo "=== nmap Scan ==="
+          sudo apt-get update -qq && sudo apt-get install -y nmap -qq
+          nmap -p 22 ${{ inputs.instance_ip }}
+
+      - name: Test SSH Connection
+        run: |
+          echo "🔐 Attempting SSH connection..."
+          ssh -vvv \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=30 \
+            -i ./keys/draftbook_KEYPAR.pem \
+            ubuntu@${{ inputs.instance_ip }} \
+            "echo '✅ SSH connection successful!' && uname -a"
+        continue-on-error: true
+
+      - name: Check EC2 Instance Details
+        run: |
+          echo "📊 Getting EC2 instance details..."
+          aws ec2 describe-instances \
+            --filters "Name=ip-address,Values=${{ inputs.instance_ip }}" \
+            --query 'Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress,SecurityGroups[0].GroupId]' \
+            --output table
+
+      - name: Check Security Group Rules
+        run: |
+          echo "🔒 Getting Security Group rules..."
+          SG_ID=$(aws ec2 describe-instances \
+            --filters "Name=ip-address,Values=${{ inputs.instance_ip }}" \
+            --query 'Reservations[0].Instances[0].SecurityGroups[0].GroupId' \
+            --output text)
+          
+          echo "Security Group ID: $SG_ID"
+          echo ""
+          echo "=== Inbound Rules ==="
+          aws ec2 describe-security-groups \
+            --group-ids $SG_ID \
+            --query 'SecurityGroups[0].IpPermissions' \
+            --output table
