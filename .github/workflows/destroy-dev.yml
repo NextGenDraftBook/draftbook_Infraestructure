@@ -16,7 +16,7 @@ env:
   TF_VAR_NODE_APP_SERVICE: ${{ secrets.TF_VAR_NODE_APP_SERVICE }}
   TF_VAR_AWS_ENVIRONMENT: "dev"
   TF_VAR_AWS_SERVER_NAME: "draftbook-dev-server"
-  TF_VAR_AWS_RESTAURANT_SG: ${{ secrets.TF_VAR_AWS_RESTAURANT_SG }}
+  TF_VAR_AWS_SG: ${{ secrets.TF_VAR_AWS_SG }}
   TF_VAR_MAIN_DOMAIN: ${{ secrets.TF_VAR_MAIN_DOMAIN }}
 
 jobs:
@@ -36,10 +36,10 @@ jobs:
             - name: Create SSH Keys from secrets
               run: |
                 mkdir -p ./envs/dev/keys
-                echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./envs/dev/keys/restaurant_app_key
-                echo "${{ secrets.SSH_PUBLIC_KEY }}" > ./envs/dev/keys/restaurant_app_key.pub
-                chmod 600 ./envs/dev/keys/restaurant_app_key
-                chmod 644 ./envs/dev/keys/restaurant_app_key.pub
+                echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./envs/dev/keys/draftbook_app_key
+                echo "${{ secrets.SSH_PUBLIC_KEY }}" > ./envs/dev/keys/draftbook_app_key.pub
+                chmod 600 ./envs/dev/keys/draftbook_app_key
+                chmod 644 ./envs/dev/keys/draftbook_app_key.pub
               
             - name: Setup Terraform
               uses: hashicorp/setup-terraform@v2

@@ -15,7 +15,7 @@ env:
   TF_VAR_NODE_APP_SERVICE: ${{ secrets.TF_VAR_NODE_APP_SERVICE }}
   TF_VAR_AWS_ENVIRONMENT: "qa"
   TF_VAR_AWS_SERVER_NAME: "draftbook-qa-server"
-  TF_VAR_AWS_RESTAURANT_SG: ${{ secrets.TF_VAR_AWS_RESTAURANT_SG }}
+  TF_VAR_AWS_SG: ${{ secrets.TF_VAR_AWS_SG }}
   TF_VAR_MAIN_DOMAIN: ${{ secrets.TF_VAR_MAIN_DOMAIN }}
 
 jobs:
