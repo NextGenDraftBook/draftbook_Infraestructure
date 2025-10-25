@@ -38,10 +38,13 @@ jobs:
       - name: Create SSH Keys from secrets
         run: |
           mkdir -p ./envs/dev/keys
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./envs/dev/keys/draftbook_app_key
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ./envs/dev/keys/draftbook_app_key.pub
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ./envs/dev/keys/draftbook_app_key
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" | tr -d '\r' > ./envs/dev/keys/draftbook_app_key.pub
           chmod 600 ./envs/dev/keys/draftbook_app_key
           chmod 644 ./envs/dev/keys/draftbook_app_key.pub
+          # Verificar que la llave se creó correctamente
+          ls -la ./envs/dev/keys/
+          head -1 ./envs/dev/keys/draftbook_app_key
 
       - name: Upload SSH Keys
         uses: actions/upload-artifact@v4
