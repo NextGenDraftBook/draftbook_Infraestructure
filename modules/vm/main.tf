@@ -54,11 +54,12 @@ resource "aws_instance" "draftbook_app_server" {
             "sudo chmod 777 /containers",
             "sudo chmod 777 /containers/.env",
 
-            "sudo echo \"[default]\naws_access_key_id=${var.access_key}\naws_secret_access_key=${var.secret_key}\" | sudo tee /home/ubuntu/.aws/credentials >/dev/null",
+            # TODO: Configurar instance profile en lugar de credenciales estáticas
+            # "sudo echo \"[default]\naws_access_key_id=xxx\naws_secret_access_key=xxx\" | sudo tee /home/ubuntu/.aws/credentials >/dev/null",
             "sudo echo \"[default]\nregion=${var.region}\noutput=json\" | sudo tee /home/ubuntu/.aws/config >/dev/null",
             "sudo chown -R ubuntu:ubuntu /home/ubuntu/.aws",
             "sudo chmod 700 /home/ubuntu/.aws",
-            "sudo chmod 600 /home/ubuntu/.aws/credentials /home/ubuntu/.aws/config",
+            "sudo chmod 600 /home/ubuntu/.aws/config",
          ]
     }
 

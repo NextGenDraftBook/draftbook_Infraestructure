@@ -1,13 +1,9 @@
 provider "aws" {
-    access_key = var.aws_access_key
-    secret_key = var.aws_secret_key
-
+  region = var.aws_region
 }
 
 module "vm-linux-server" {
   source = "../../modules/vm"
-  access_key        = var.aws_access_key
-  secret_key        = var.aws_secret_key
   region            = var.aws_region
   aws_key_pair_name = var.aws_key_pair_name
   aws_draftbook_sg  = var.aws_draftbook_sg
