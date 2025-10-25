@@ -16,7 +16,7 @@ resource "aws_instance" "draftbook_app_server" {
   key_name = aws_key_pair.draftbook_app_keys.key_name
   user_data = filebase64("${path.module}/scripts/apps-install.sh")
   vpc_security_group_ids = [
-    aws_security_group.draftbook_sg.id
+    data.aws_security_group.draftbook_sg.id
   ]
 
   tags = {
