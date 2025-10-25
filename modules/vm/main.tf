@@ -44,6 +44,9 @@ resource "aws_instance" "draftbook_app_server" {
   key_name = data.aws_key_pair.draftbook_app_keys.key_name
   user_data = filebase64("${path.module}/scripts/apps-install.sh")
   
+  # Asegurar que la instancia tenga IP pública
+  associate_public_ip_address = true
+  
   # Usar una subnet del VPC
   subnet_id = length(data.aws_subnets.available.ids) > 0 ? data.aws_subnets.available.ids[0] : null
   
@@ -62,6 +65,7 @@ resource "aws_instance" "draftbook_app_server" {
           user = "ubuntu"
           private_key = file("./keys/draftbook_app_key")
           host = self.public_ip
+          timeout = "5m"
         }
         inline = [ 
             "sudo mkdir /containers",
@@ -86,6 +90,7 @@ resource "aws_instance" "draftbook_app_server" {
           user = "ubuntu"
           private_key = file("./keys/draftbook_app_key")
           host = self.public_ip
+          timeout = "5m"
         }
         source = "./containers/docker-compose.yml"
         destination = "/containers/docker-compose.yml"
@@ -108,6 +113,7 @@ resource "null_resource" "setup_app" {
         user = "ubuntu"
         private_key = file("./keys/draftbook_app_key")
         host = aws_instance.draftbook_app_server.public_ip
+        timeout = "5m"
       }
       inline = [ 
         "cd /containers",
