@@ -59,5 +59,35 @@ sudo apt install docker-ctop
 echo '========================================='
 echo '=== PASO 8: INSTALAR CLI AWS ==='
 echo '========================================='
-if ! command -v aws >/dev/null 2>&1; then sudo apt-get update -y && sudo apt-get install -y unzip curl jq && curl -sSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip && unzip -q awscliv2.zip && sudo ./aws/install && rm -rf awscliv2.zip aws; fi
+if ! command -v aws >/dev/null 2>&1; then 
+    sudo apt-get update -y && sudo apt-get install -y unzip curl jq 
+    curl -sSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip 
+    unzip -q awscliv2.zip 
+    sudo ./aws/install 
+    rm -rf awscliv2.zip aws
+fi
 aws --version
+
+echo '========================================='
+echo '=== PASO 9: CREAR DIRECTORIOS ==='
+echo '========================================='
+sudo mkdir -p /containers
+sudo mkdir -p /home/ubuntu/.aws
+touch /containers/.env
+sudo chmod 777 /containers
+sudo chmod 777 /containers/.env
+
+echo '========================================='
+echo '=== PASO 10: CONFIGURAR AWS CLI ==='
+echo '========================================='
+sudo echo "[default]
+region=us-east-2
+output=json" | sudo tee /home/ubuntu/.aws/config >/dev/null
+sudo chown -R ubuntu:ubuntu /home/ubuntu/.aws
+sudo chmod 700 /home/ubuntu/.aws
+sudo chmod 600 /home/ubuntu/.aws/config
+
+echo '========================================='
+echo '=== SETUP COMPLETADO ==='
+echo '========================================='
+echo "Instalación finalizada en: $(date)"

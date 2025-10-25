@@ -59,84 +59,50 @@ resource "aws_instance" "draftbook_app_server" {
   }
 }
 
-# Esperar 3 minutos para que user_data (apps-install.sh) termine de ejecutarse
-resource "time_sleep" "wait_for_user_data" {
-  create_duration = "180s"
+# NOTA: Los provisioners SSH han sido deshabilitados temporalmente debido a problemas de conectividad
+# desde GitHub Actions. Todo el setup se hace ahora vía user_data (apps-install.sh)
+
+# Esperar 5 minutos para que user_data complete la instalación
+resource "time_sleep" "wait_for_setup" {
+  create_duration = "300s"  # 5 minutos
   depends_on = [ aws_instance.draftbook_app_server ]
 }
 
-# Null resource para los provisioners (ejecutar después del delay)
-resource "null_resource" "initial_setup" {
-  depends_on = [ time_sleep.wait_for_user_data ]
+# TODO: Descomentar estos provisioners una vez que se resuelva el acceso SSH desde GitHub Actions
+# O implementar un método alternativo (AWS Systems Manager Session Manager, etc.)
 
-  #PROVISIONERS para ejecutar comandos después de crear la instancia
-    provisioner "remote-exec" {
-        connection {
-          type = "ssh"
-          user = "ubuntu"
-          private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
-          host = aws_instance.draftbook_app_server.public_ip
-          timeout = "10m"
-        }
-        
-        # Esperar a que cloud-init termine de ejecutar user_data
-        inline = [ 
-            "echo 'Esperando a que cloud-init termine...'",
-            "cloud-init status --wait || echo 'cloud-init no disponible, continuando...'",
-            "echo 'Sistema listo, creando directorios...'",
-            "sudo mkdir -p /containers",
-            "sudo mkdir -p /home/ubuntu/.aws",
-            "touch /containers/.env",
-            "sudo chmod 777 /containers",
-            "sudo chmod 777 /containers/.env",
+/*
+# Null resource para copiar docker-compose y ejecutar aplicación
+resource "null_resource" "deploy_app" {
+  depends_on = [ time_sleep.wait_for_setup ]
 
-            # TODO: Configurar instance profile en lugar de credenciales estáticas
-            # "sudo echo \"[default]\naws_access_key_id=xxx\naws_secret_access_key=xxx\" | sudo tee /home/ubuntu/.aws/credentials >/dev/null",
-            "sudo echo \"[default]\nregion=${var.region}\noutput=json\" | sudo tee /home/ubuntu/.aws/config >/dev/null",
-            "sudo chown -R ubuntu:ubuntu /home/ubuntu/.aws",
-            "sudo chmod 700 /home/ubuntu/.aws",
-            "sudo chmod 600 /home/ubuntu/.aws/config",
-         ]
+  provisioner "file" {
+    connection {
+      type = "ssh"
+      user = "ubuntu"
+      private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
+      host = aws_instance.draftbook_app_server.public_ip
+      timeout = "10m"
     }
+    source = "./containers/docker-compose.yml"
+    destination = "/containers/docker-compose.yml"
+  }
 
-  #Copiando contenido del docker compose a EC2
-    provisioner "file" {
-        connection {
-          type = "ssh"
-          user = "ubuntu"
-          private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
-          host = aws_instance.draftbook_app_server.public_ip
-          timeout = "10m"
-        }
-        source = "./containers/docker-compose.yml"
-        destination = "/containers/docker-compose.yml"
-        
+  provisioner "remote-exec" {
+    connection {
+      type = "ssh"
+      user = "ubuntu"
+      private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
+      host = aws_instance.draftbook_app_server.public_ip
+      timeout = "10m"
     }
+    inline = [ 
+      "cloud-init status --wait",
+      "cd /containers",
+      "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 970547369328.dkr.ecr.us-east-2.amazonaws.com",
+      "docker compose up -d"
+    ]
+  }
 }
-
-# Esperar 2 minutos adicionales después del setup inicial
-resource "time_sleep" "wait_before_docker" {
-  create_duration = "120s"
-  depends_on = [ null_resource.initial_setup ]
-}
-
-resource "null_resource" "setup_app" {
-    depends_on = [ time_sleep.wait_before_docker ]
-    provisioner "remote-exec" {
-      connection {
-        type = "ssh"
-        user = "ubuntu"
-        private_key = file("${path.root}/keys/draftbook_KEYPAR.pem")
-        host = aws_instance.draftbook_app_server.public_ip
-        timeout = "10m"
-      }
-      inline = [ 
-        "cd /containers",
-        #Cambiar linea por info del ECR nuestro 
-        "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 970547369328.dkr.ecr.us-east-2.amazonaws.com",
-        "docker compose up -d"
-
-       ]
-    }
-}
+*/
 
