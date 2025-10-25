@@ -1,15 +1,11 @@
-# Backend S3 deshabilitado temporalmente por problemas de permisos
-# El state se guarda localmente en el workflow (se pierde entre ejecuciones)
-# TODO: Configurar backend S3 correctamente con permisos apropiados
-
-# terraform {
-#   backend "s3" {
-#     bucket  = "draftbook-terraform-state"
-#     key     = "dev/terraform.tfstate"
-#     region  = "us-east-1"
-#     encrypt = true
-#   }
-# }
+terraform {
+  backend "s3" {
+    bucket  = "draftbook-terraform-state"
+    key     = "dev/terraform.tfstate"
+    region  = "us-east-2"
+    encrypt = true
+  }
+}
 
 provider "aws" {
   region = var.aws_region

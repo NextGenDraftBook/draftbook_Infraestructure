@@ -5,7 +5,7 @@
 
 set -e
 
-AWS_REGION="us-east-1"
+AWS_REGION="us-east-2"
 BUCKET_NAME="draftbook-terraform-state"
 
 echo "🚀 Configurando backend de Terraform..."
@@ -29,7 +29,8 @@ else
     echo "🔨 Creando bucket S3..."
     aws s3api create-bucket \
         --bucket "$BUCKET_NAME" \
-        --region "$AWS_REGION"
+        --region "$AWS_REGION" \
+        --create-bucket-configuration LocationConstraint="$AWS_REGION"
     
     # Habilitar versionado
     aws s3api put-bucket-versioning \
