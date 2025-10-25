@@ -13,16 +13,11 @@ data "aws_vpc" "selected" {
   id = data.aws_security_group.draftbook_sg.vpc_id
 }
 
-# Obtener una subnet en el VPC
+# Obtener subnets disponibles en el VPC
 data "aws_subnets" "available" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.selected.id]
-  }
-  
-  filter {
-    name   = "default-for-az"
-    values = ["true"]
   }
 }
 
